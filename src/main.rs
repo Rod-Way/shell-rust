@@ -1,10 +1,13 @@
 use core::str;
 #[allow(unused_imports)]
 use std::io::{self, Write};
-use std::process;
+use std::{env, path::Path, process};
 
 fn main() {
     let builtins = vec!["exit", "echo", "type"];
+
+    let path_env = env::var("PATH").unwrap_or_else(|_| "PATH not found".to_string());
+    let paths: Vec<&str> = path_env.split(':').collect();
 
     loop {
         print!("$ ");
@@ -38,7 +41,18 @@ fn main() {
                 if builtins.contains(&command) {
                     println!("{} is a shell builtin", command);
                 } else {
-                    println!("{} not found", command);
+                    let mut found = false;
+                    for path in &paths {
+                        let full_path = Path::new(path).join(command);
+                        if full_path.exists() {
+                            println!("{} is {}", command, full_path.display());
+                            found = true;
+                            break;
+                        }
+                    }
+                    if !found {
+                        println!("{} not found", command);
+                    }
                 }
             }
             _ => println!("{}: command not found", input),
