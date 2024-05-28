@@ -41,21 +41,47 @@ fn main() {
                 if builtins.contains(&command) {
                     println!("{} is a shell builtin", command);
                 } else {
-                    let mut found = false;
+                    let mut is_found = false;
                     for path in &paths {
                         let full_path = Path::new(path).join(command);
                         if full_path.exists() {
                             println!("{} is {}", command, full_path.display());
-                            found = true;
+                            is_found = true;
                             break;
                         }
                     }
-                    if !found {
+                    if !is_found {
                         println!("{} not found", command);
                     }
                 }
             }
-            _ => println!("{}: command not found", input),
+            _ => {
+                let command = tokens[0];
+                let mut is_found = false;
+
+                for path in &paths {
+                    let full_path = Path::new(path).join(command);
+                    if full_path.exists() {
+                        is_found = true;
+
+                        let args = &tokens[1..];
+
+                        let status = process::Command::new(full_path)
+                            .args(args)
+                            .status()
+                            .expect("failed to execute process");
+
+                        if !status.success() {
+                            eprintln!("{}: command failed", command);
+                        }
+                        break;
+                    }
+                }
+
+                if !is_found {
+                    println!("{}: command not found", input)
+                }
+            }
         }
     }
 }
