@@ -1,3 +1,4 @@
+use core::str;
 #[allow(unused_imports)]
 use std::io::{self, Write};
 use std::process;
@@ -16,6 +17,7 @@ fn main() {
 
         match tokens[..] {
             ["exit", code] => process::exit(code.parse::<i32>().unwrap()),
+            ["echo", arg] => println!("{}", arg),
             _ => println!("{}: command not found", input),
         }
     }
