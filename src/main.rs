@@ -4,6 +4,8 @@ use std::io::{self, Write};
 use std::process;
 
 fn main() {
+    let builtins = vec!["exit", "echo", "type"];
+
     loop {
         print!("$ ");
         io::stdout().flush().unwrap();
@@ -30,6 +32,14 @@ fn main() {
             "echo" => {
                 let args = &tokens[1..].join(" ");
                 println!("{}", args)
+            }
+            "type" if tokens.len() == 2 => {
+                let command = tokens[1];
+                if builtins.contains(&command) {
+                    println!("{} is a shell builtin", command);
+                } else {
+                    println!("{} not found", command);
+                }
             }
             _ => println!("{}: command not found", input),
         }
