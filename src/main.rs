@@ -1,7 +1,11 @@
 use core::str;
 #[allow(unused_imports)]
-use std::io::{self, Write};
-use std::{env, path::Path, process};
+use std::{
+    env,
+    io::{self, Write},
+    path::{self, Path},
+    process,
+};
 
 fn main() {
     let builtins = vec!["exit", "echo", "type"];
@@ -29,10 +33,17 @@ fn main() {
                 let the_path = tokens[1];
                 match the_path {
                     "~" => {
-                        env::set_current_dir(env::home_dir().unwrap());
+                        let home_dir = match env::var("HOME").or_else(|_| env::var("USERPROFILE")) {
+                            Ok(dir) => path::PathBuf::from(dir),
+                            Err(_) => {
+                                println!("error: home path not found");
+                                continue;
+                            }
+                        };
+                        env::set_current_dir(&home_dir).unwrap();
                     }
                     _ => {
-                        println!("error: incorrect path")
+                        println!("error: incorrect path");
                     }
                 }
             }
