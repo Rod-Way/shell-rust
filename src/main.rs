@@ -56,7 +56,8 @@ fn main() {
                 }
             }
             "pwd" if tokens.len() == 1 => {
-                println!("{}", path_env);
+                let path = env::current_dir().unwrap();
+                println!("{}", path.display());
             }
             _ => {
                 let command = tokens[0];
