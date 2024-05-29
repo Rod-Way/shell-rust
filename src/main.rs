@@ -25,6 +25,20 @@ fn main() {
         }
 
         match tokens[0] {
+            "cd" if tokens.len() == 2 => {
+                let the_path = tokens[1];
+                match the_path {
+                    "~" => {
+                        env::set_current_dir(env::home_dir().unwrap());
+                    }
+                    _ => {
+                        println!("error: incorrect path")
+                    }
+                }
+            }
+            "pwd" if tokens.len() == 1 => {
+                println!("{}", env::current_dir().unwrap().display());
+            }
             "exit" if tokens.len() == 2 => {
                 let code = tokens[1].parse::<i32>().unwrap_or_else(|_| {
                     println!("exit: invalid exit code");
@@ -54,10 +68,6 @@ fn main() {
                         println!("{} not found", command);
                     }
                 }
-            }
-            "pwd" if tokens.len() == 1 => {
-                let path = env::current_dir().unwrap();
-                println!("{}", path.display());
             }
             _ => {
                 let command = tokens[0];
