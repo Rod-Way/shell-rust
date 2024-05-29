@@ -55,6 +55,9 @@ fn main() {
                     }
                 }
             }
+            "pwd" if tokens.len() == 1 => {
+                println!("{}", path_env);
+            }
             _ => {
                 let command = tokens[0];
                 let mut is_found = false;
