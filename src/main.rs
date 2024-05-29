@@ -37,18 +37,25 @@ fn main() {
                             Ok(dir) => path::PathBuf::from(dir),
                             Err(_) => {
                                 println!("error: home path not found");
-                                continue;
+                                return; // Вернуться из функции, если директория не найдена
                             }
                         };
-                        env::set_current_dir(&home_dir).unwrap();
+                        if let Err(_) = env::set_current_dir(&home_dir) {
+                            println!("error: failed to change directory to home");
+                        }
                     }
                     _ => {
-                        let dir = fs::canonicalize(Path::new(the_path)).unwrap();
-                        if !dir.exists() || !dir.is_dir() {
-                            println!("{}: No such file or directory\\n", dir.display());
-                            continue;
+                        if let Ok(dir) = fs::canonicalize(Path::new(the_path)) {
+                            if dir.exists() && dir.is_dir() {
+                                if let Err(_) = env::set_current_dir(dir) {
+                                    println!("error: failed to change directory");
+                                }
+                            } else {
+                                println!("{}: No such file or directory\n", dir.display());
+                            }
+                        } else {
+                            println!("error: failed to canonicalize path");
                         }
-                        env::set_current_dir(dir).unwrap();
                     }
                 }
             }
