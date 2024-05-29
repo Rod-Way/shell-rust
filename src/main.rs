@@ -51,10 +51,10 @@ fn main() {
                                     println!("error: failed to change directory");
                                 }
                             } else {
-                                println!("{}: No such file or directory\n", dir.display());
+                                println!("{}: No such file or directory", dir.display());
                             }
                         } else {
-                            println!("{}: No such file or directory\n", the_path);
+                            println!("{}: No such file or directory", the_path);
                         }
                     }
                 }
