@@ -47,7 +47,7 @@ fn main() {
                         match fs::canonicalize(Path::new(the_path)) {
                             Ok(dir) => {
                                 if !dir.exists() || !dir.is_dir() {
-                                    println!("error: incorrect path");
+                                    println!("{}: No such file or directory\\n", dir.display());
                                     continue;
                                 }
                                 env::set_current_dir(dir).unwrap();
