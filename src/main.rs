@@ -1,5 +1,3 @@
-use core::str;
-#[allow(unused_imports)]
 use std::{
     env, fs,
     io::{self, Write},
@@ -8,7 +6,7 @@ use std::{
 };
 
 fn main() {
-    let builtins = vec!["exit", "echo", "type"];
+    let builtins = vec!["exit", "echo", "type", "pwd", "cd"];
 
     let path_env = env::var("PATH").unwrap_or_else(|_| "PATH not found".to_string());
     let paths: Vec<&str> = path_env.split(':').collect();
@@ -59,7 +57,12 @@ fn main() {
                     }
                 }
             }
-            "pwd" if tokens.len() == 1 => {
+            "clear" => {
+                let mut stdout = io::stdout();
+                write!(stdout, "\x1B[2J\x1B[H").unwrap();
+                stdout.flush().unwrap();
+            }
+            "pwd" => {
                 println!("{}", env::current_dir().unwrap().display());
             }
             "exit" if tokens.len() == 2 => {
@@ -91,6 +94,14 @@ fn main() {
                         println!("{} not found", command);
                     }
                 }
+            }
+            "rev" => {
+                let data: Vec<&str> = tokens[1..].iter().rev().cloned().collect();
+                for el in data {
+                    let reversed: String = el.chars().rev().collect();
+                    print!("{} ", reversed);
+                }
+                println!("");
             }
             _ => {
                 let command = tokens[0];
