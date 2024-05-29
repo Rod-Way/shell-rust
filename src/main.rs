@@ -1,7 +1,7 @@
 use core::str;
 #[allow(unused_imports)]
 use std::{
-    env,
+    env, fs,
     io::{self, Write},
     path::{self, Path},
     process,
@@ -43,7 +43,20 @@ fn main() {
                         env::set_current_dir(&home_dir).unwrap();
                     }
                     _ => {
-                        println!("error: incorrect path");
+                        /*let cannonic =*/
+                        match fs::canonicalize(Path::new(the_path)) {
+                            Ok(dir) => {
+                                if !dir.exists() || !dir.is_dir() {
+                                    println!("error: incorrect path");
+                                    continue;
+                                }
+                                env::set_current_dir(dir).unwrap();
+                            }
+                            Err(_) => {
+                                println!("error: incorrect path");
+                                continue;
+                            }
+                        };
                     }
                 }
             }
