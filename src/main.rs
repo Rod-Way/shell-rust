@@ -43,20 +43,12 @@ fn main() {
                         env::set_current_dir(&home_dir).unwrap();
                     }
                     _ => {
-                        /*let cannonic =*/
-                        match fs::canonicalize(Path::new(the_path)) {
-                            Ok(dir) => {
-                                if !dir.exists() || !dir.is_dir() {
-                                    println!("{}: No such file or directory\\n", dir.display());
-                                    continue;
-                                }
-                                env::set_current_dir(dir).unwrap();
-                            }
-                            Err(_) => {
-                                println!("error: incorrect path");
-                                continue;
-                            }
-                        };
+                        let dir = fs::canonicalize(Path::new(the_path)).unwrap();
+                        if !dir.exists() || !dir.is_dir() {
+                            println!("{}: No such file or directory\\n", dir.display());
+                            continue;
+                        }
+                        env::set_current_dir(dir).unwrap();
                     }
                 }
             }
