@@ -54,7 +54,7 @@ fn main() {
                                 println!("{}: No such file or directory\n", dir.display());
                             }
                         } else {
-                            println!("error: failed to canonicalize path");
+                            println!("{}: No such file or directory\n", the_path);
                         }
                     }
                 }
