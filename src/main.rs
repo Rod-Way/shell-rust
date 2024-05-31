@@ -5,11 +5,20 @@ use std::{
     process,
 };
 
-fn main() {
-    let builtins = vec!["exit", "echo", "type", "pwd", "cd"];
+// mod filesystem;
 
-    let path_env = env::var("PATH").unwrap_or_else(|_| "PATH not found".to_string());
-    let paths: Vec<&str> = path_env.split(':').collect();
+fn main() {
+    let builtins = vec!["exit", "ls", "type", "pwd", "cd", "clear"];
+
+    let mut current_dir = env::current_dir().unwrap();
+    current_dir.push("src\\builtins");
+    let builtins_path = fs::canonicalize(current_dir).unwrap();
+    let path_env = env::var("PATH").unwrap_or_else(|_| "".to_string());
+    let mut paths: Vec<_> = env::split_paths(&path_env).collect();
+    paths.push(builtins_path);
+
+    // setting uppdated PATH
+    env::set_var("PATH", env::join_paths(paths.clone()).unwrap());
 
     loop {
         print!("$ ");
@@ -28,42 +37,65 @@ fn main() {
 
         match tokens[0] {
             "cd" if tokens.len() == 2 => {
-                let the_path = tokens[1];
-                match the_path {
-                    "~" => {
-                        let home_dir = match env::var("HOME").or_else(|_| env::var("USERPROFILE")) {
-                            Ok(dir) => path::PathBuf::from(dir),
-                            Err(_) => {
-                                println!("error: home path not found");
-                                return; // Вернуться из функции, если директория не найдена
-                            }
-                        };
-                        if let Err(_) = env::set_current_dir(&home_dir) {
-                            println!("error: failed to change directory to home");
-                        }
+                let the_path = &tokens[1];
+
+                let mut parts: Vec<&str> = the_path.split('/').collect();
+
+                let home_dir = match env::var("HOME").or_else(|_| env::var("USERPROFILE")) {
+                    Ok(dir) => path::PathBuf::from(dir),
+                    Err(_) => {
+                        println!("error: home path not found");
+                        return;
                     }
-                    _ => {
-                        if let Ok(dir) = fs::canonicalize(Path::new(the_path)) {
-                            if dir.exists() && dir.is_dir() {
-                                if let Err(_) = env::set_current_dir(dir) {
-                                    println!("error: failed to change directory");
-                                }
-                            } else {
-                                println!("{}: No such file or directory", dir.display());
-                            }
-                        } else {
-                            println!("{}: No such file or directory", the_path);
-                        }
+                };
+
+                match parts.get(0) {
+                    Some(&"~") | Some(&"$") | Some(&"$HOME") => {
+                        // let home_dir = env::var("HOME")
+                        //     .or_else(|_| env::var("USERPROFILE"))
+                        //     .unwrap();
+                        parts[0] = &home_dir.to_str().unwrap();
                     }
+                    _ => {}
+                }
+                let new_path = parts.join("/");
+
+                if let Ok(dir) = fs::canonicalize(Path::new(&new_path)) {
+                    if dir.exists() && dir.is_dir() {
+                        if let Err(_) = env::set_current_dir(&dir) {
+                            println!("error: failed to change directory");
+                        }
+                    } else {
+                        println!("{}: No such file or directory", dir.display());
+                    }
+                } else {
+                    println!("{}: No such file or directory", new_path);
                 }
             }
-            "clear" => {
-                let mut stdout = io::stdout();
-                write!(stdout, "\x1B[2J\x1B[H").unwrap();
-                stdout.flush().unwrap();
+            "ls" => {
+                if tokens.len() == 1 {
+                    for el in fs::read_dir(env::current_dir().unwrap()).unwrap() {
+                        let entry_path = el.unwrap().path();
+                        if let Some(file_name) = entry_path.file_name() {
+                            if let Some(name_str) = file_name.to_str() {
+                                println!("{}", name_str);
+                            }
+                        }
+                    }
+                } else if tokens.len() == 2 {
+                    continue;
+                }
             }
+
             "pwd" => {
-                println!("{}", env::current_dir().unwrap().display());
+                println!(
+                    "{}",
+                    env::current_dir()
+                        .unwrap()
+                        .display()
+                        .to_string()
+                        .trim_start_matches(r"\\?\")
+                )
             }
             "exit" if tokens.len() == 2 => {
                 let code = tokens[1].parse::<i32>().unwrap_or_else(|_| {
@@ -71,10 +103,6 @@ fn main() {
                     1
                 });
                 process::exit(code);
-            }
-            "echo" => {
-                let args = &tokens[1..].join(" ");
-                println!("{}", args)
             }
             "type" if tokens.len() == 2 => {
                 let command = tokens[1];
@@ -95,20 +123,15 @@ fn main() {
                     }
                 }
             }
-            "rev" => {
-                let data: Vec<&str> = tokens[1..].iter().rev().cloned().collect();
-                for el in data {
-                    let reversed: String = el.chars().rev().collect();
-                    print!("{} ", reversed);
-                }
-                println!("");
+            "01110010" => {
+                println!("(■_■¬) made by RodWay")
             }
             _ => {
                 let command = tokens[0];
                 let mut is_found = false;
 
                 for path in &paths {
-                    let full_path = Path::new(path).join(command);
+                    let full_path = Path::new(path).join(command.to_string() + ".exe");
                     if full_path.exists() {
                         is_found = true;
 
